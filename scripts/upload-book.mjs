@@ -40,9 +40,7 @@ const {
 	get_buffer,
 	read_entry_data,
 	get_entry_size,
-	free_buffer,
-	END_OF_FILE,
-	ENTRY_ERROR
+	free_buffer
 } = module;
 
 function isImage(path) {
@@ -54,7 +52,7 @@ function* readArchiveEntries({ file, extractData = false }) {
 
 	for (;;) {
 		const entryPtr = get_next_entry(archivePtr);
-		if (entryPtr === END_OF_FILE || entryPtr === ENTRY_ERROR) {
+		if (entryPtr === null) {
 			close_archive(archivePtr);
 			yield null;
 			break;
