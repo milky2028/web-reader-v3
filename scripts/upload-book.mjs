@@ -1,4 +1,4 @@
-import initialize from 'extract-zip-rar';
+import initialize from '../node_modules/extract-zip-rar/dist/extract.node.js';
 import sharp from 'sharp';
 import { initializeApp, cert } from 'firebase-admin/app';
 import serviceAccount from './cert.json' assert { type: 'json' };
@@ -18,7 +18,7 @@ const [, , archivePath] = process.argv;
 const fullPath = new URL(archivePath, import.meta.url);
 
 globalThis.wasmURL = new URL(
-	'../node_modules/extract-zip-rar/dist/extract.wasm',
+	'../node_modules/extract-zip-rar/dist/extract.node.wasm',
 	import.meta.url
 ).toString();
 
