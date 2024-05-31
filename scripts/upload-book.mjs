@@ -18,6 +18,7 @@ function isImage(path) {
 	return path.endsWith('.jpg') || path.endsWith('.png');
 }
 
+// the thing to do would be to maybe use fetch to get the local file as a ReadableStream, then pipe those bytes with a writable stream directly into Emscripten
 const [module, file] = await Promise.all([initialize(), readFile(fullPath)]);
 const {
 	_malloc,
