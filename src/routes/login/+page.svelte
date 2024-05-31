@@ -1,11 +1,28 @@
+<script lang="ts">
+	import { auth } from '$lib/auth';
+	import { getUser } from '$lib/user.svelte';
+	import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
+
+	async function onSubmit(event: SubmitEvent) {
+		event.preventDefault();
+		const data = new FormData(event.target as HTMLFormElement);
+
+		const email = data.get('email');
+		const password = data.get('password');
+		if (typeof email === 'string' && typeof password === 'string') {
+			await signInWithEmailAndPassword(auth, email, password);
+		}
+	}
+</script>
+
 <style>
-	.page {
+	div {
 		display: grid;
 		place-items: center;
 		height: 25vh;
 	}
 
-	.login {
+	form {
 		display: grid;
 		row-gap: 1rem;
 		width: 25vw;
@@ -20,10 +37,15 @@
 	}
 </style>
 
-<div class="page">
-	<div class="login">
-		<h1>Login</h1>
-		<label>Email<br /><input type="email" /></label>
-		<label>Password<br /><input type="password" /></label>
-	</div>
+<div>
+	{#if getUser()}
+		<button on:click={() => signOut(auth)}>Sign Out</button>
+	{:else}
+		<form on:submit={onSubmit}>
+			<h1>Log In</h1>
+			<label>Email<br /><input name="email" type="email" /></label>
+			<label>Password<br /><input name="password" type="password" /></label>
+			<input type="submit" value="Log In" />
+		</form>
+	{/if}
 </div>
