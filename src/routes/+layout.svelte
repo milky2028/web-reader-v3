@@ -5,6 +5,12 @@
 	];
 </script>
 
+<style>
+	main {
+		height: calc(100% - 3rem);
+	}
+</style>
+
 <div>
 	{#each routes as route, i}<a href={route.path}>{route.name}</a>{i !== routes.length - 1
 			? ' | '
