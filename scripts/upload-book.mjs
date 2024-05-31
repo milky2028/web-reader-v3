@@ -73,10 +73,7 @@ function* readArchiveEntries({ file, extractData = false }) {
 				yield {
 					fileName,
 					buffer: buffer.slice(),
-					free: () => {
-						free_buffer(entry_data);
-						free_buffer(buffer);
-					}
+					free: () => free_buffer(entry_data)
 				};
 			} else {
 				yield { fileName };
@@ -96,7 +93,6 @@ function range({ end, start = 0, step = 1 }) {
 	return numbers;
 }
 
-const ptr = _malloc(archiveSize);
 function createEmscriptenStream(startingOffset) {
 	let position = 0;
 
@@ -108,6 +104,7 @@ function createEmscriptenStream(startingOffset) {
 	});
 }
 
+const ptr = _malloc(archiveSize);
 await readStream.pipeTo(createEmscriptenStream(ptr));
 
 log('Initializing Firebase...');
