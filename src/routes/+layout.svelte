@@ -1,8 +1,8 @@
 <script lang="ts">
 	const routes = [
-		{ path: '/login', name: 'Log In' },
 		{ path: '/', name: 'Upload' },
-		{ path: '/books', name: 'Books' }
+		{ path: '/books', name: 'Books' },
+		{ path: '/login', name: 'Log In' }
 	];
 </script>
 
