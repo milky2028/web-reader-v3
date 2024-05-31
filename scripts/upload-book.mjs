@@ -6,6 +6,12 @@ import serviceAccount from './cert.json' assert { type: 'json' };
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore } from 'firebase-admin/firestore';
 
+function log(msg) {
+	console.log('===================================');
+	console.log(msg);
+	console.log('===================================');
+}
+
 const [, , archivePath] = process.argv;
 const fullPath = new URL(archivePath, import.meta.url);
 
@@ -14,10 +20,7 @@ globalThis.wasmURL = new URL(
 	import.meta.url
 ).toString();
 
-function isImage(path) {
-	return path.endsWith('.jpg') || path.endsWith('.png');
-}
-
+log(`Reading file ${fullPath.toString()}`);
 // the thing to do would be to maybe use fetch to get the local file as a ReadableStream, then pipe those bytes with a writable stream directly into Emscripten
 const [module, file] = await Promise.all([initialize(), readFile(fullPath)]);
 const {
@@ -35,6 +38,10 @@ const {
 	END_OF_FILE,
 	ENTRY_ERROR
 } = module;
+
+function isImage(path) {
+	return path.endsWith('.jpg') || path.endsWith('.png');
+}
 
 function* readArchiveEntries({ file, extractData = false }) {
 	const archivePtr = open_archive(file.ptr, file.size);
@@ -83,6 +90,7 @@ function range({ end, start = 0, step = 1 }) {
 	return numbers;
 }
 
+log('Initializing Firebase...');
 const app = initializeApp({
 	credential: cert(serviceAccount),
 	storageBucket: 'gs://web-reader-ae90f.appspot.com'
@@ -105,7 +113,10 @@ const bookName = decodeURIComponent(
 		.replace(/.cbr|.cbz|.zip|.rar/g, '')
 );
 
-const CHUNK_SIZE = 30;
+const USER_ID = 'P1rHmhJ80KOevyB3EmxkyyEzUGj1';
+const CHUNK_SIZE = 15;
+
+log('Enumerating archive...');
 const iterator = readArchiveEntries({ file: { ptr, size: file.length }, extractData: true });
 
 let done = false;
@@ -114,8 +125,8 @@ do {
 	const operations = range({ start: position, end: position + CHUNK_SIZE }).map(async () => {
 		const entry = iterator.next().value;
 		if (entry) {
-			const path = `${bookName}/${entry.fileName}`;
-			console.log(`Uploading to ${path}...`);
+			const path = `${USER_ID}/${bookName}/${entry.fileName}`;
+			log(`Uploading to ${path}...`);
 
 			const optimizedBuffer = await sharp(entry.buffer)
 				.jpeg({ mozjpeg: true, quality: 75 })
@@ -123,10 +134,15 @@ do {
 
 			await Promise.all([
 				bucket.file(path).save(optimizedBuffer),
-				pages.doc(`${bookName}+${entry.fileName}`).set({ name: entry.fileName, book: bookName })
+				pages.add({
+					name: entry.fileName,
+					book: bookName,
+					path: encodeURIComponent(path),
+					userId: USER_ID
+				})
 			]);
 
-			entry.free();
+			// entry.free();
 		} else {
 			done = true;
 		}
@@ -136,7 +152,11 @@ do {
 	position += CHUNK_SIZE;
 } while (!done);
 
+log(`Creating book ${bookName}`);
 const entries = [...readArchiveEntries({ file: { ptr, size: file.length } })].sort();
-await books
-	.doc(bookName)
-	.set({ name: bookName, length: entries.length, cover: entries[0].fileName });
+await books.add({
+	name: bookName,
+	length: entries.length,
+	cover: entries[0].fileName,
+	userId: USER_ID
+});
