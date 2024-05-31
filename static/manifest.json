@@ -1,0 +1,46 @@
+{
+	"name": "Comic Reader",
+	"short_name": "Comics",
+	"description": "ead comics stored as .cbr, .cbz, .zip, or .rar files.",
+	"start_url": "/books",
+	"display": "standalone",
+	"background_color": "#007ba7",
+	"theme_color": "#007ba7",
+	"icons": [
+		{
+			"src": "/reader-1024x1024.png",
+			"sizes": "1024x1024",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/reader-512x512.png",
+			"sizes": "512x512",
+			"type": "image/png",
+			"purpose": "maskable"
+		},
+		{
+			"src": "/reader-144x144.png",
+			"sizes": "144x144",
+			"type": "image/png"
+		},
+		{
+			"src": "/reader-180x180.png",
+			"sizes": "180x180",
+			"type": "image/png"
+		}
+	],
+	"file_handlers": [
+		{
+			"action": "/",
+			"accept": {
+				"application/zip": [".zip", ".cbz"],
+				"application/x-zip-compressed": [".zip", ".cbz"],
+				"multipart/x-zip": [".zip", ".cbz"],
+				"application/vnd.rar": [".rar", ".cbr"],
+				"application/x-rar-compressed": [".rar", ".cbr"],
+				"application/octet-stream": [".zip", ".cbz", ".rar", ".cbr"]
+			}
+		}
+	]
+}
