@@ -3,6 +3,7 @@
 	import { getUser } from '$lib/user.svelte';
 	import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 
+	const user = $derived(getUser());
 	async function onSubmit(event: SubmitEvent) {
 		event.preventDefault();
 		const data = new FormData(event.target as HTMLFormElement);
@@ -38,10 +39,10 @@
 </style>
 
 <div>
-	{#if getUser()}
-		<button on:click={() => signOut(auth)}>Sign Out</button>
+	{#if user}
+		<button onclick={() => signOut(auth)}>Sign Out</button>
 	{:else}
-		<form on:submit={onSubmit}>
+		<form onsubmit={onSubmit}>
 			<h1>Log In</h1>
 			<label>Email<br /><input name="email" type="email" /></label>
 			<label>Password<br /><input name="password" type="password" /></label>
