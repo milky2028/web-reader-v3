@@ -1,10 +1,12 @@
-import { readFile } from 'fs/promises';
 import initialize from 'extract-zip-rar';
 import sharp from 'sharp';
 import { initializeApp, cert } from 'firebase-admin/app';
 import serviceAccount from './cert.json' assert { type: 'json' };
 import { getStorage } from 'firebase-admin/storage';
 import { getFirestore } from 'firebase-admin/firestore';
+import { createReadStream } from 'fs';
+import stream from 'node:stream';
+import { stat } from 'fs/promises';
 
 function log(msg) {
 	console.log('===================================');
@@ -22,7 +24,11 @@ globalThis.wasmURL = new URL(
 
 log(`Reading file ${fullPath.toString()}`);
 // the thing to do would be to maybe use fetch to get the local file as a ReadableStream, then pipe those bytes with a writable stream directly into Emscripten
-const [module, file] = await Promise.all([initialize(), readFile(fullPath)]);
+
+const archiveSize = (await stat(fullPath)).size;
+const readStream = stream.Readable.toWeb(createReadStream(fullPath));
+
+const module = await initialize();
 const {
 	_malloc,
 	open_archive,
@@ -66,7 +72,7 @@ function* readArchiveEntries({ file, extractData = false }) {
 
 				yield {
 					fileName,
-					buffer,
+					buffer: buffer.slice(),
 					free: () => {
 						free_buffer(entry_data);
 						free_buffer(buffer);
@@ -90,6 +96,20 @@ function range({ end, start = 0, step = 1 }) {
 	return numbers;
 }
 
+const ptr = _malloc(archiveSize);
+function createEmscriptenStream(startingOffset) {
+	let position = 0;
+
+	return new WritableStream({
+		write(chunk) {
+			module.HEAPU8.set(chunk, startingOffset + position);
+			position += chunk.byteLength;
+		}
+	});
+}
+
+await readStream.pipeTo(createEmscriptenStream(ptr));
+
 log('Initializing Firebase...');
 const app = initializeApp({
 	credential: cert(serviceAccount),
@@ -100,10 +120,6 @@ const bucket = getStorage(app).bucket();
 const db = getFirestore(app);
 const books = db.collection('books');
 const pages = db.collection('pages');
-
-const bytes = new Uint8Array(file);
-const ptr = _malloc(file.length);
-module.HEAPU8.set(bytes, ptr);
 
 const bookName = decodeURIComponent(
 	fullPath
@@ -117,7 +133,7 @@ const USER_ID = 'P1rHmhJ80KOevyB3EmxkyyEzUGj1';
 const CHUNK_SIZE = 15;
 
 log('Enumerating archive...');
-const iterator = readArchiveEntries({ file: { ptr, size: file.length }, extractData: true });
+const iterator = readArchiveEntries({ file: { ptr, size: archiveSize }, extractData: true });
 
 let done = false;
 let position = 0;
@@ -142,7 +158,7 @@ do {
 				})
 			]);
 
-			// entry.free();
+			entry.free();
 		} else {
 			done = true;
 		}
@@ -153,7 +169,7 @@ do {
 } while (!done);
 
 log(`Creating book ${bookName}`);
-const entries = [...readArchiveEntries({ file: { ptr, size: file.length } })].sort();
+const entries = [...readArchiveEntries({ file: { ptr, size: archiveSize } })].sort();
 await books.add({
 	name: bookName,
 	length: entries.length,
