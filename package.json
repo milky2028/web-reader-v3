@@ -19,7 +19,6 @@
 		"eslint": "^9.0.0",
 		"eslint-config-prettier": "^9.1.0",
 		"eslint-plugin-svelte": "^2.36.0",
-		"extract-zip-rar": "^0.7.0",
 		"firebase-admin": "^12.1.1",
 		"globals": "^15.0.0",
 		"prettier": "^3.1.1",
@@ -33,5 +32,8 @@
 		"typescript-eslint": "^8.0.0-alpha.20",
 		"vite": "^5.0.3"
 	},
-	"type": "module"
+	"type": "module",
+	"dependencies": {
+		"extract-zip-rar": "^0.8.0"
+	}
 }

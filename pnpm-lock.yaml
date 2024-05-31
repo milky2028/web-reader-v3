@@ -4,6 +4,11 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+dependencies:
+  extract-zip-rar:
+    specifier: ^0.8.0
+    version: 0.8.0
+
 devDependencies:
   '@sveltejs/adapter-auto':
     specifier: ^3.0.0
@@ -23,9 +28,6 @@ devDependencies:
   eslint-plugin-svelte:
     specifier: ^2.36.0
     version: 2.39.0(eslint@9.3.0)(svelte@5.0.0-next.144)(ts-node@10.9.2)
-  extract-zip-rar:
-    specifier: ^0.7.0
-    version: 0.7.0
   firebase-admin:
     specifier: ^12.1.1
     version: 12.1.1
@@ -1930,9 +1932,9 @@ packages:
     dev: true
     optional: true
 
-  /extract-zip-rar@0.7.0:
-    resolution: {integrity: sha512-cZxaAF/wYNCnfYQVpQUlmfj3JPdP6ZWIs4olEo9cB3kFgBeKkcuNg4SZbqabjSGaBK0RjqswnvQmSDV3TNB3FA==}
-    dev: true
+  /extract-zip-rar@0.8.0:
+    resolution: {integrity: sha512-dygYCT/kzA1cdczrI6d5I8h/TlQmLLuw71vP8/7jUpO2Ldx+F5lTjgBfVWnzCTXwi8pfSN6k/32u2hmmyfEA3w==}
+    dev: false
 
   /farmhash@3.3.1:
     resolution: {integrity: sha512-XUizHanzlr/v7suBr/o85HSakOoWh6HKXZjFYl5C2+Gj0f0rkw+XTUZzrd9odDsgI9G5tRUcF4wSbKaX04T0DQ==}
