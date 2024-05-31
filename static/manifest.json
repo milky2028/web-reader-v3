@@ -1,7 +1,7 @@
 {
 	"name": "Comic Reader",
 	"short_name": "Comics",
-	"description": "ead comics stored as .cbr, .cbz, .zip, or .rar files.",
+	"description": "Read comics stored as .cbr, .cbz, .zip, or .rar files.",
 	"start_url": "/books",
 	"display": "standalone",
 	"background_color": "#007ba7",
