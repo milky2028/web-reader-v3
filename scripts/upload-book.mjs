@@ -55,9 +55,15 @@ function* readArchiveEntries({ file, extractData = false }) {
 				const size = get_entry_size(entryPtr);
 				const entry_data = read_entry_data(archivePtr, entryPtr);
 				const buffer = get_buffer(entry_data, size);
-				free_buffer(entry_data);
 
-				yield { fileName, buffer };
+				yield {
+					fileName,
+					buffer,
+					free: () => {
+						free_buffer(entry_data);
+						free_buffer(buffer);
+					}
+				};
 			} else {
 				yield { fileName };
 			}
@@ -65,6 +71,15 @@ function* readArchiveEntries({ file, extractData = false }) {
 			skip_extraction(archivePtr);
 		}
 	}
+}
+
+function range({ end, start = 0, step = 1 }) {
+	const numbers = [];
+	for (let i = start; i < end; i += step) {
+		numbers.push(i);
+	}
+
+	return numbers;
 }
 
 const app = initializeApp({
@@ -89,25 +104,38 @@ const bookName = decodeURIComponent(
 		.replace(/.cbr|.cbz|.zip|.rar/g, '')
 );
 
-console.log('Creating book...');
-const entries = [...readArchiveEntries({ file: { ptr, size: file.length } })];
+const CHUNK_SIZE = 30;
+const iterator = readArchiveEntries({ file: { ptr, size: file.length }, extractData: true });
 
+let done = false;
+let position = 0;
+do {
+	const operations = range({ start: position, end: position + CHUNK_SIZE }).map(async () => {
+		const entry = iterator.next().value;
+		if (entry) {
+			const path = `${bookName}/${entry.fileName}`;
+			console.log(`Uploading to ${path}...`);
+
+			const optimizedBuffer = await sharp(entry.buffer)
+				.jpeg({ mozjpeg: true, quality: 75 })
+				.toBuffer();
+
+			await Promise.all([
+				bucket.file(path).save(optimizedBuffer),
+				pages.doc(`${bookName}+${entry.fileName}`).set({ name: entry.fileName, book: bookName })
+			]);
+
+			entry.free();
+		} else {
+			done = true;
+		}
+	});
+
+	await Promise.all(operations);
+	position += CHUNK_SIZE;
+} while (!done);
+
+const entries = [...readArchiveEntries({ file: { ptr, size: file.length } })].sort();
 await books
 	.doc(bookName)
 	.set({ name: bookName, length: entries.length, cover: entries[0].fileName });
-
-for (const entry of readArchiveEntries({ file: { ptr, size: file.length }, extractData: true })) {
-	if (entry) {
-		const path = `${bookName}/${entry.fileName}`;
-		console.log(`Uploading to ${path}...`);
-
-		const optimizedBuffer = await sharp(entry.buffer)
-			.jpeg({ mozjpeg: true, quality: 75 })
-			.toBuffer();
-
-		await Promise.all([
-			bucket.file(path).save(optimizedBuffer),
-			pages.doc(`${bookName}+${entry.fileName}`).set({ name: entry.fileName, book: bookName })
-		]);
-	}
-}
