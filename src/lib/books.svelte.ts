@@ -2,7 +2,7 @@ import type { User } from 'firebase/auth';
 import { getDocs, query, where, orderBy } from 'firebase/firestore/lite';
 import { booksCollection } from './db';
 
-type Book = {
+export type Book = {
 	cover: string;
 	length: number;
 	name: string;
