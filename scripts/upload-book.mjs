@@ -164,10 +164,13 @@ do {
 } while (!done);
 
 log(`Creating book ${bookName}`);
-const entries = [...readArchiveEntries({ file: { ptr, size: archiveSize } })].sort();
+const entries = [...readArchiveEntries({ file: { ptr, size: archiveSize } })]
+	.map((entry) => entry.fileName)
+	.sort();
+
 await books.add({
 	name: bookName,
 	length: entries.length,
-	cover: entries[0].fileName,
+	cover: entries[0],
 	userId: USER_ID
 });
